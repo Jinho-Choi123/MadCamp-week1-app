@@ -14,6 +14,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.renderscript.Sampler;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -40,13 +41,18 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 //
 import android.util.Log;
@@ -293,11 +299,7 @@ public class MainActivity extends AppCompatActivity {
         GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
 
         //Making Owner Info
-        JsonObject owner = new JsonObject();
-        owner.addProperty("ID", acct.getId());
-        owner.addProperty("displayname", acct.getDisplayName());
-        owner.addProperty("email", acct.getEmail());
-        data.add("Owner", owner);
+        data.addProperty("OwnerID", acct.getId());
         RESULT = new Gson().toJson(data);
 
         //MAKE onclicklistener for upload btn
@@ -309,6 +311,26 @@ public class MainActivity extends AppCompatActivity {
                 String Category = acct.getId();
                 // "."이나 "@"가 들어가면 안된다.
                 contactsRef.child(Category).setValue(RESULT);
+            }
+        });
+
+        //Make onclicklistener for download btn
+        Button download_btn = (Button) findViewById(R.id.contactlist_download);
+        download_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String Category = acct.getId();
+                contactsRef.child(Category).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        Log.i("MainActivityyyyyyyyyyyyyyyyyyyyyyyyyyy", snapshot.getValue().toString());
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
             }
         });
 
