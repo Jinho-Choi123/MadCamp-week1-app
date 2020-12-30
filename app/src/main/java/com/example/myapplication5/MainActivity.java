@@ -4,10 +4,13 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +27,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.drive.DriveResourceClient;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
@@ -111,7 +116,7 @@ class ContactUtil {
 class Contact_Adapter extends BaseAdapter {
     private TextView phoneNumber;
     private TextView name;
-    private TextView id;
+    // private TextView id;
     private ArrayList<Contact> contact_list = new ArrayList<Contact>();
 
     public Contact_Adapter() {
@@ -136,13 +141,13 @@ class Contact_Adapter extends BaseAdapter {
 
         phoneNumber = (TextView) convertView.findViewById(R.id.contact_phonenumber);
         name = (TextView) convertView.findViewById(R.id.contact_name);
-        id = (TextView) convertView.findViewById(R.id.contact_id);
+        //id = (TextView) convertView.findViewById(R.id.contact_id);
 
         Contact item = contact_list.get(position);
 
         phoneNumber.setText(item.getPhoneNumber());
         name.setText(item.getName());
-        id.setText(Long.toString(item.getId()));
+        //id.setText(Long.toString(item.getId()));
         return convertView;
 
     }
@@ -214,6 +219,15 @@ public class MainActivity extends AppCompatActivity {
             adapter.addItem(arraylist.get(i).getPhoneNumber(), arraylist.get(i).getName(), arraylist.get(i).getId());
         }
         adapter.notifyDataSetChanged();
+
+        //onclick listener for upload button
+        Button upload = (Button) findViewById(R.id.contactlist_upload);
+        upload.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DriveResourceClient
+            }
+        });
 
 
 
