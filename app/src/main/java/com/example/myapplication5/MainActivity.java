@@ -230,17 +230,17 @@ public class MainActivity extends AppCompatActivity {
         ts1.setContent(R.id.content1) ;
         ts1.setIndicator("연락처") ;
         tabHost1.addTab(ts1)  ;
-        signOut=findViewById(R.id.sign_out_button);
-        signOut.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v) {
-                switch (v.getId()) {
-                    case R.id.sign_out_button:
-                        signOut();
-                        break;
-                }
-            }
-        });
+//        signOut=findViewById(R.id.sign_out_button);
+//        signOut.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View v) {
+//                switch (v.getId()) {
+//                    case R.id.sign_out_button:
+//                        signOut();
+//                        break;
+//                }
+//            }
+//        });
 
         GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
 
