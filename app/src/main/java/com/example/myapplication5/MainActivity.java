@@ -8,15 +8,21 @@ import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.content.Context;
+
+import android.content.pm.ApplicationInfo;
+
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+
 import android.view.MenuItem;
+
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -33,6 +39,9 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.Scopes;
+import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
@@ -120,7 +129,7 @@ class ContactUtil {
 class Contact_Adapter extends BaseAdapter {
     private TextView phoneNumber;
     private TextView name;
-    private TextView id;
+    // private TextView id;
     private ArrayList<Contact> contact_list = new ArrayList<Contact>();
 
     public Contact_Adapter() {
@@ -145,13 +154,13 @@ class Contact_Adapter extends BaseAdapter {
 
         phoneNumber = (TextView) convertView.findViewById(R.id.contact_phonenumber);
         name = (TextView) convertView.findViewById(R.id.contact_name);
-        id = (TextView) convertView.findViewById(R.id.contact_id);
+        //id = (TextView) convertView.findViewById(R.id.contact_id);
 
         Contact item = contact_list.get(position);
 
         phoneNumber.setText(item.getPhoneNumber());
         name.setText(item.getName());
-        id.setText(Long.toString(item.getId()));
+        //id.setText(Long.toString(item.getId()));
         return convertView;
 
     }
@@ -219,6 +228,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater menuInflater = getMenuInflater();
+        menuInflater.inflate(R.menu.toolbar, menu);
+
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        switch(item.getItemId()){
+            case R.id.toolbar_next_button:{
+                signOut();
+            }
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -247,9 +273,18 @@ public class MainActivity extends AppCompatActivity {
         }
         adapter.notifyDataSetChanged();
 
+//        //onclick listener for upload button
+//        Button upload = (Button) findViewById(R.id.contactlist_upload);
+//        upload.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                DriveResourceClient
+//            }
+//        });
 
-
+        Scope SCOPE_DRIVE = new Scope("https://www.googleapis.com/auth/drive");
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestScopes(new Scope(Scopes.DRIVE_FULL))
                 .requestEmail()
                 .build();
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
@@ -262,7 +297,6 @@ public class MainActivity extends AppCompatActivity {
         ts1.setContent(R.id.content1) ;
         ts1.setIndicator("연락처") ;
         tabHost1.addTab(ts1)  ;
-
 
 
         GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);

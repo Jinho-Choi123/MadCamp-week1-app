@@ -49,13 +49,13 @@
             <FrameLayout
                 android:id="@android:id/tabcontent"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="match_parent">
 
                 <!-- 첫 번째 페이지. content1 -->
                 <LinearLayout
                     android:id="@+id/content1"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:orientation="vertical">
 
                     <TextView
@@ -67,12 +67,49 @@
                         android:text="TAB CONTENT 1" />
 
                     //TAB CONTENT 1에 Contact list ListView을 넣는다
-                    <ListView
+
+                    // Scrollview로 ListView을 감싼다.
+                    <ScrollView
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:id="@+id/contact_list"
-                        />
+                        android:id="@+id/scroll"
+                        android:fillViewport="true"
+                        android:scrollbars="none"
+                        android:layout_weight="1"
+                        >
 
+                        <ListView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:id="@+id/contact_list"
+                            />
+
+                    </ScrollView>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_gravity="center_horizontal">
+                        <Button
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:text="Upload"
+                            android:layout_gravity="center_horizontal"
+                            android:id="@+id/contactlist_upload"
+                            android:layout_weight="0.5"
+                            />
+
+                        <Button
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:text="Download"
+                            android:layout_gravity="center_horizontal"
+                            android:id="@+id/contactlist_download"
+                            android:layout_weight="0.5"
+                            />
+
+                    </LinearLayout>
 
 
                 </LinearLayout>
