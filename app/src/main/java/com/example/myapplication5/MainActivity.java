@@ -12,6 +12,8 @@ import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -28,7 +30,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.drive.DriveResourceClient;
+import com.google.android.gms.common.Scopes;
+import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
@@ -198,6 +201,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater menuInflater = getMenuInflater();
+        menuInflater.inflate(R.menu.toolbar, menu);
+
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        switch(item.getItemId()){
+            case R.id.toolbar_next_button:{
+                signOut();
+            }
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -220,18 +240,18 @@ public class MainActivity extends AppCompatActivity {
         }
         adapter.notifyDataSetChanged();
 
-        //onclick listener for upload button
-        Button upload = (Button) findViewById(R.id.contactlist_upload);
-        upload.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                DriveResourceClient
-            }
-        });
+//        //onclick listener for upload button
+//        Button upload = (Button) findViewById(R.id.contactlist_upload);
+//        upload.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                DriveResourceClient
+//            }
+//        });
 
-
-
+        Scope SCOPE_DRIVE = new Scope("https://www.googleapis.com/auth/drive");
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestScopes(new Scope(Scopes.DRIVE_FULL))
                 .requestEmail()
                 .build();
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
@@ -255,6 +275,7 @@ public class MainActivity extends AppCompatActivity {
 //                }
 //            }
 //        });
+
 
         GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
 
