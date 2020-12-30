@@ -18,6 +18,7 @@
         android:textSize="40sp" />
 
 
+
     <com.google.android.gms.common.SignInButton
         android:id="@+id/sign_in_button"
         android:layout_width="wrap_content"
