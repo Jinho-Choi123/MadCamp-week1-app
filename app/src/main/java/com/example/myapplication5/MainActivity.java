@@ -1,10 +1,16 @@
 package com.example.myapplication5;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
 import android.content.Context;
+
 import android.content.pm.ApplicationInfo;
+
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -14,6 +20,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+
+import android.view.MenuItem;
+
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -23,6 +32,7 @@ import android.widget.ListView;
 import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.appcompat.widget.Toolbar;
 
 import com.bumptech.glide.Glide;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -185,7 +195,6 @@ public class MainActivity extends AppCompatActivity {
     private Contact_Adapter adapter;
     static final String[] LIST_MENU = {"Name", "Phone Number", "Id"};
 
-    Button signOut;
     GoogleSignInClient mGoogleSignInClient;
 
     private void signOut() {
@@ -198,6 +207,24 @@ public class MainActivity extends AppCompatActivity {
 
                     }
                 });
+    }
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater menuInflater = getMenuInflater();
+        menuInflater.inflate(R.menu.toolbar, menu);
+
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        switch(item.getItemId()){
+            case R.id.toolbar_next_button:{
+                signOut();
+            }
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -221,6 +248,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.bar);
+        setSupportActionBar(toolbar);
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayShowTitleEnabled(false);
+
 
         adapter = new Contact_Adapter();
 
@@ -264,17 +297,6 @@ public class MainActivity extends AppCompatActivity {
         ts1.setContent(R.id.content1) ;
         ts1.setIndicator("연락처") ;
         tabHost1.addTab(ts1)  ;
-//        signOut=findViewById(R.id.sign_out_button);
-//        signOut.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View v) {
-//                switch (v.getId()) {
-//                    case R.id.sign_out_button:
-//                        signOut();
-//                        break;
-//                }
-//            }
-//        });
 
 
         GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
