@@ -7,6 +7,8 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import java.lang.reflect.Array;
@@ -95,25 +97,36 @@ public class Contacts extends AppCompatActivity {
 
     ContactUtil contactutil;
     Context context;
-    String result = "";
+    private ListView listview;
+    private Contact_Adapter adapter;
+    static final String[] LIST_MENU = {"Name", "Phone Number", "Id"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_contacts);
+
+        adapter = new Contact_Adapter();
+
+        listview = (ListView) findViewById(R.id.contact_list);
+        listview.setAdapter(adapter);
+
         context = this;
         contactutil = new ContactUtil(this);
-        TextView tv = (TextView) findViewById(R.id.contact_list);
+        ListView lv = (ListView) findViewById(R.id.contact_list);
+
+        lv.setAdapter(adapter);
+
         ArrayList<Contact> arraylist = contactutil.getContactList();
 
         for(int i=0;i < arraylist.size();i++) {
-            result += arraylist.get(i).getName();
-            result += arraylist.get(i).getPhoneNumber();
-            result += arraylist.get(i).getId();
+
+            adapter.addItem(arraylist.get(i).getPhoneNumber(), arraylist.get(i).getName(), arraylist.get(i).getId());
+
+//            result += arraylist.get(i).getName();
+//            result += arraylist.get(i).getPhoneNumber();
+//            result += arraylist.get(i).getId();
         }
-
-        tv.setText(result);
-
-
+        adapter.notifyDataSetChanged();
     }
 }
