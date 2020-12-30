@@ -230,11 +230,6 @@ public class MainActivity extends AppCompatActivity {
         ts1.setContent(R.id.content1) ;
         ts1.setIndicator("연락처") ;
         tabHost1.addTab(ts1)  ;
-//
-//        imageView = findViewById(R.id.imageView);
-//        name = findViewById(R.id.textName);
-//        email=findViewById(R.id.textEmail);
-//        id=findViewById(R.id.textID);
         signOut=findViewById(R.id.sign_out_button);
         signOut.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -248,8 +243,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
-
-
 
         // 두 번째 Tab. (탭 표시 텍스트:"TAB 2"), (페이지 뷰:"content2")
         TabHost.TabSpec ts2 = tabHost1.newTabSpec("Tab Spec 2") ;
