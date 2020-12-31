@@ -141,7 +141,6 @@ class ContactUtil {
     }
 }
 
-
 class Contact_Adapter extends BaseAdapter {
     private TextView phoneNumber;
     private TextView name;
@@ -176,13 +175,13 @@ class Contact_Adapter extends BaseAdapter {
 
         phoneNumber = (TextView) convertView.findViewById(R.id.contact_phonenumber);
         name = (TextView) convertView.findViewById(R.id.contact_name);
-        id = (TextView) convertView.findViewById(R.id.contact_id);
+        //id = (TextView) convertView.findViewById(R.id.contact_id);
 
         Contact item = contact_list.get(position);
 
         phoneNumber.setText(item.getPhoneNumber());
         name.setText(item.getName());
-        id.setText(Long.toString(item.getId()));
+        //id.setText(Long.toString(item.getId()));
 
         return convertView;
 
