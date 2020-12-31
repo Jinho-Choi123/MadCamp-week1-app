@@ -65,7 +65,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 //
-
 class Contact {
     Long id;
     String phoneNumber;
@@ -145,7 +144,7 @@ class Contact_Adapter extends BaseAdapter {
     private TextView phoneNumber;
     private TextView name;
     private TextView id;
-    private ArrayList<Contact> contact_list = new ArrayList<Contact>();
+    ArrayList<Contact> contact_list = new ArrayList<Contact>();
 
     public Contact_Adapter() {
 
@@ -269,18 +268,17 @@ public class MainActivity extends AppCompatActivity {
         listview = (ListView) findViewById(R.id.contact_list);
         listview.setAdapter(adapter);
 
-        listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
+        listview.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                //Object listItem = listview.getItemAtPosition(position);
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 String phone ="tel:"+((TextView)view.findViewById(R.id.contact_phonenumber)).getText().toString();
-                Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse(phone));
+                Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse(phone));
                 startActivity(intent);
-
-                //Toast.makeText(context, phone  , Toast.LENGTH_SHORT).show();
+                return false;
             }
         });
+
+
 
         context = this;
         contactutil = new ContactUtil(this);
