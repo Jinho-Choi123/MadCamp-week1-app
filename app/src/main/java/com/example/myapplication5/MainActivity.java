@@ -2,12 +2,14 @@ package com.example.myapplication5;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -26,6 +28,7 @@ import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -52,9 +55,12 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -206,9 +212,24 @@ class Contact_Adapter extends BaseAdapter {
 
         contact_list.add(item);
     }
+
+    public void deleteAll() {
+
+    }
+
+
 }
 
 public class MainActivity extends AppCompatActivity {
+
+    public static void largeLog(String tag, String content) {
+        if (content.length() > 4000) {
+            Log.i(tag, content.substring(0, 4000));
+            largeLog(tag, content.substring(4000));
+        } else {
+            Log.i(tag, content);
+        }
+    }
 
     //connect to firebase
     DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
@@ -250,14 +271,45 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    public void downloadHandler(String phone_number_, String name_) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        builder.setTitle("Will you update your Phone Contact list?").setMessage("Choose");
+        builder.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                //add data to phone contacts + update contacts UI
+                Intent intent = new Intent(ContactsContract.Intents.Insert.ACTION);
+                intent.setType(ContactsContract.RawContacts.CONTENT_TYPE);
+
+                intent.putExtra(ContactsContract.Intents.Insert.NAME, name_)
+                        .putExtra(ContactsContract.Intents.Insert.PHONE, phone_number_);
+                startActivity(intent);
+            }
+        });
+
+        builder.setNegativeButton("NO", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+            }
+        });
+
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        JsonObject data = new JsonObject();
-        JsonArray contact_list = new JsonArray();
-        String RESULT;
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestScopes(new Scope(Scopes.DRIVE_FULL))
+                .requestEmail()
+                .build();
+        mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+
+        GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.bar);
         setSupportActionBar(toolbar);
@@ -273,10 +325,55 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                String Category = acct.getId();
+                contactsRef.child(Category).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+
+
+                        listview.setAdapter(null);
+                        Contact_Adapter download_adapter = new Contact_Adapter();
+                        listview.setAdapter(download_adapter);
+
+                        String data = snapshot.getValue().toString();
+                        Gson gson = new Gson();
+                        ArrayList<Contact> download_contact_list = new ArrayList<Contact>();
+
+                        JsonObject jsonobj = gson.fromJson(data, JsonObject.class);
+                        largeLog("1111111111111111111111", jsonobj.toString());
+                        JsonArray contact_l = jsonobj.getAsJsonArray("ContactList");
+                        largeLog("222222222222222222", contact_l.toString());
+
+                        //change json object to list of object
+                        Iterator<JsonElement> iter = contact_l.iterator();
+                        JsonObject json_iter = new JsonObject();
+                        while(iter.hasNext()) {
+                            json_iter = iter.next().getAsJsonObject();
+                            Contact contact = gson.fromJson(json_iter, Contact.class);
+                            download_contact_list.add(contact);
+                        }
+
+                        //download_contact_list is List of Contact. now we need to update the screen to downloaded contact list
+
+                        Log.i("HELLLLLLLLLLLLLLLLLLLLLLLLLLLL", "HELOO asdf");
+                        downloadHandler(download_contact_list);
+
+
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+
+
                 //Object listItem = listview.getItemAtPosition(position);
-                String phone ="tel:"+((TextView)view.findViewById(R.id.contact_phonenumber)).getText().toString();
-                Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse(phone));
-                startActivity(intent);
+                String phonenumber_ = ((TextView)view.findViewById(R.id.contact_phonenumber)).getText().toString();
+                String name_ = ((TextView)view.findViewById(R.id.contact_name)).getText().toString();
+                String phone ="tel:"+phonenumber_;
+                downloadHandler(phonenumber_, name_);
 
                 //Toast.makeText(context, phone  , Toast.LENGTH_SHORT).show();
             }
@@ -286,38 +383,31 @@ public class MainActivity extends AppCompatActivity {
         contactutil = new ContactUtil(this);
         Contact iter;
 
-        listview.setAdapter(adapter);
-
         ArrayList<Contact> arraylist = contactutil.getContactList();
+
+        JsonObject data = new JsonObject();
+        JsonArray contact_list = new JsonArray();
+        Gson gson = new Gson();
+        String RESULT;
 
         for(int i=0;i < arraylist.size();i++) {
             iter = arraylist.get(i);
-            JsonObject obj = new JsonObject();
+            JsonObject obj = (JsonObject) gson.toJsonTree(iter);
+            Log.i("33333333333", obj.toString());
             adapter.addItem(iter.getPhoneNumber(), iter.getName(), iter.getId());
-
-            obj.addProperty("id", iter.getId());
-            obj.addProperty("name", iter.getName());
-            obj.addProperty("phonenumber", iter.getPhoneNumber());
-
             contact_list.add(obj);
         }
 
 
-        data.addProperty("ContactList", String.valueOf(contact_list));
+        data.add("ContactList", contact_list);
 
         adapter.notifyDataSetChanged();
       
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestScopes(new Scope(Scopes.DRIVE_FULL))
-                .requestEmail()
-                .build();
-        mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
-        GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
 
         //Making Owner Info
         data.addProperty("OwnerID", acct.getId());
-        RESULT = new Gson().toJson(data);
+        RESULT = gson.toJson(data);
 
         //MAKE onclicklistener for upload btn
         Button upload_btn = (Button) findViewById(R.id.contactlist_upload);
@@ -340,7 +430,36 @@ public class MainActivity extends AppCompatActivity {
                 contactsRef.child(Category).addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        Log.i("MainActivityyyyyyyyyyyyyyyyyyyyyyyyyyy", snapshot.getValue().toString());
+
+
+                    listview.setAdapter(null);
+                    Contact_Adapter download_adapter = new Contact_Adapter();
+                    listview.setAdapter(download_adapter);
+
+                    String data = snapshot.getValue().toString();
+                    Gson gson = new Gson();
+                    ArrayList<Contact> download_contact_list = new ArrayList<Contact>();
+
+                    JsonObject jsonobj = gson.fromJson(data, JsonObject.class);
+                    largeLog("1111111111111111111111", jsonobj.toString());
+                    JsonArray contact_l = jsonobj.getAsJsonArray("ContactList");
+                    largeLog("222222222222222222", contact_l.toString());
+
+                    //change json object to list of object
+                        Iterator<JsonElement> iter = contact_l.iterator();
+                        JsonObject json_iter = new JsonObject();
+                        while(iter.hasNext()) {
+                            json_iter = iter.next().getAsJsonObject();
+                            Contact contact = gson.fromJson(json_iter, Contact.class);
+                            download_contact_list.add(contact);
+                        }
+
+                        //download_contact_list is List of Contact. now we need to update the screen to downloaded contact list
+
+                        Log.i("HELLLLLLLLLLLLLLLLLLLLLLLLLLLL", "HELOO asdf");
+                        downloadHandler(download_contact_list);
+
+
                     }
 
                     @Override
