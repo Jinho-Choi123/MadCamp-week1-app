@@ -15,6 +15,7 @@ import android.icu.text.Transliterator;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.renderscript.Sampler;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -38,10 +39,32 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.Scopes;
+import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+//
+import android.util.Log;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+//
 
 class Contact {
     Long id;
@@ -187,6 +210,11 @@ class Contact_Adapter extends BaseAdapter {
 }
 
 public class MainActivity extends AppCompatActivity {
+
+    //connect to firebase
+    DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
+    DatabaseReference contactsRef = mRootRef.child("Contacts");
+
     ContactUtil contactutil;
     Context context;
     private ListView listview;
@@ -202,7 +230,6 @@ public class MainActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<Void> task) {
                         Toast.makeText(MainActivity.this, "Signed out successfully", Toast.LENGTH_LONG).show();
                         finish();
-
                     }
                 });
     }
@@ -229,6 +256,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        JsonObject data = new JsonObject();
+        JsonArray contact_list = new JsonArray();
+        String RESULT;
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.bar);
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
@@ -254,21 +285,72 @@ public class MainActivity extends AppCompatActivity {
 
         context = this;
         contactutil = new ContactUtil(this);
+        Contact iter;
 
         listview.setAdapter(adapter);
 
         ArrayList<Contact> arraylist = contactutil.getContactList();
 
         for(int i=0;i < arraylist.size();i++) {
+            iter = arraylist.get(i);
+            JsonObject obj = new JsonObject();
+            adapter.addItem(iter.getPhoneNumber(), iter.getName(), iter.getId());
 
-            adapter.addItem(arraylist.get(i).getPhoneNumber(), arraylist.get(i).getName(), arraylist.get(i).getId());
+            obj.addProperty("id", iter.getId());
+            obj.addProperty("name", iter.getName());
+            obj.addProperty("phonenumber", iter.getPhoneNumber());
+
+            contact_list.add(obj);
         }
-        adapter.notifyDataSetChanged();
 
+
+        data.addProperty("ContactList", String.valueOf(contact_list));
+
+        adapter.notifyDataSetChanged();
+      
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestScopes(new Scope(Scopes.DRIVE_FULL))
                 .requestEmail()
                 .build();
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+
+        GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
+
+        //Making Owner Info
+        data.addProperty("OwnerID", acct.getId());
+        RESULT = new Gson().toJson(data);
+
+        //MAKE onclicklistener for upload btn
+        Button upload_btn = (Button) findViewById(R.id.contactlist_upload);
+        upload_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //contactsRef.setValue(RESULT);
+                String Category = acct.getId();
+                // "."이나 "@"가 들어가면 안된다.
+                contactsRef.child(Category).setValue(RESULT);
+            }
+        });
+
+        //Make onclicklistener for download btn
+        Button download_btn = (Button) findViewById(R.id.contactlist_download);
+        download_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String Category = acct.getId();
+                contactsRef.child(Category).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        Log.i("MainActivityyyyyyyyyyyyyyyyyyyyyyyyyyy", snapshot.getValue().toString());
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+            }
+        });
 
         TabHost tabHost1 = (TabHost) findViewById(R.id.tabHost1) ;
         tabHost1.setup() ;
@@ -278,10 +360,6 @@ public class MainActivity extends AppCompatActivity {
         ts1.setContent(R.id.content1) ;
         ts1.setIndicator("연락처") ;
         tabHost1.addTab(ts1)  ;
-
-
-
-        GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
 
         // 두 번째 Tab. (탭 표시 텍스트:"TAB 2"), (페이지 뷰:"content2")
         TabHost.TabSpec ts2 = tabHost1.newTabSpec("Tab Spec 2") ;
