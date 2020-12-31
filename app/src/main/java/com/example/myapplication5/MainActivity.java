@@ -217,7 +217,6 @@ public class MainActivity extends AppCompatActivity {
     Context context;
     private ListView listview;
     private Contact_Adapter adapter;
-    static final String[] LIST_MENU = {"Name", "Phone Number", "Id"};
 
     GoogleSignInClient mGoogleSignInClient;
 
@@ -227,6 +226,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         Toast.makeText(MainActivity.this, "Signed out successfully", Toast.LENGTH_LONG).show();
+                        //getIntent().removeExtra("email");
                         finish();
                     }
                 });
@@ -243,6 +243,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item){
         switch(item.getItemId()){
             case R.id.toolbar_next_button: {
+
                 signOut();
             }
         }
@@ -261,7 +262,19 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.bar);
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
-        actionBar.setDisplayShowTitleEnabled(false);
+
+        Bundle bundle = getIntent().getExtras();
+        if(bundle != null){
+            String value=bundle.getString("email");
+            //Toast.makeText(context, value, Toast.LENGTH_SHORT).show();
+        }
+        actionBar.setTitle(bundle.getString("email"));
+        //actionBar.setDisplayShowTitleEnabled(false);
+
+
+
+
+
 
         adapter = new Contact_Adapter();
 

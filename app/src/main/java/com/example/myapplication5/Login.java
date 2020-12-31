@@ -158,9 +158,10 @@ public class Login extends AppCompatActivity {
     private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
         try {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
-
+            String email = account.getEmail();
             // Signed in successfully, show authenticated UI.
             Intent intent = new Intent(Login.this, MainActivity.class);
+            intent.putExtra("email", email);
             startActivity(intent);
             //update UI(account);
         } catch (ApiException e) {
