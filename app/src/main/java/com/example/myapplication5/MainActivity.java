@@ -64,161 +64,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-//
 import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-//
-
-class Contact {
-    Long id;
-    String phoneNumber;
-    String name;
-    public Long getId() {
-        return id;
-    }
-    public void setId(Long id) {
-        this.id = id;
-    }
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-    public String getName() {
-        return name;
-    }
-    public void setName(String name) {
-        this.name = name;
-    }
-}
-
-class ContactUtil {
-
-    private Context context;
-
-    public ContactUtil(Context context) {
-        this.context = context;
-    }
-
-    public ArrayList<Contact> getContactList() {
-
-        Uri uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
-
-        String[] projection = new String[]{
-                ContactsContract.CommonDataKinds.Phone.CONTACT_ID, // 연락처 ID -> 사진 정보 가져오는데 사용
-                ContactsContract.CommonDataKinds.Phone.NUMBER,        // 연락처
-                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME}; // 연락처 이름.
-
-        String[] selectionArgs = null;
-
-        String sort = ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " COLLATE LOCALIZED ASC";
-
-        Cursor contactCursor = context.getContentResolver().query(uri, projection, null, selectionArgs, sort);
-
-        ArrayList<Contact> contactlist = new ArrayList<Contact>();
-
-
-        if (contactCursor.moveToFirst()) {
-            do {
-                String phonenumber = contactCursor.getString(1).replaceAll("-", "");
-                if (phonenumber.length() == 10) {
-                    phonenumber = phonenumber.substring(0, 3) + "-"
-                            + phonenumber.substring(3, 6) + "-"
-                            + phonenumber.substring(6);
-                } else if (phonenumber.length() > 8) {
-                    phonenumber = phonenumber.substring(0, 3) + "-"
-                            + phonenumber.substring(3, 7) + "-"
-                            + phonenumber.substring(7);
-                }
-
-                Contact contact = new Contact();
-                contact.setId(contactCursor.getLong(0));
-                contact.setPhoneNumber(phonenumber);
-                contact.setName(contactCursor.getString(2));
-                contactlist.add(contact);
-
-            } while (contactCursor.moveToNext());
-        }
-        return contactlist;
-    }
-}
-
-class Contact_Adapter extends BaseAdapter {
-    private TextView phoneNumber;
-    private TextView name;
-    private TextView id;
-    private ArrayList<Contact> contact_list = new ArrayList<Contact>();
-
-    public Contact_Adapter() {
-
-    }
-
-    @Override
-    public int getCount() {
-        return contact_list.size();
-    }
-
-
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        final int pos = position;
-        final Context context = parent.getContext();
-
-        if(convertView == null) {
-            LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            convertView = inflater.inflate(R.layout.listview_contact, parent, false);
-        }
-
-        ViewGroup.LayoutParams layoutParams = convertView.getLayoutParams();
-
-        layoutParams.height = 150;
-
-        convertView.setLayoutParams(layoutParams);
-
-        phoneNumber = (TextView) convertView.findViewById(R.id.contact_phonenumber);
-        name = (TextView) convertView.findViewById(R.id.contact_name);
-        //id = (TextView) convertView.findViewById(R.id.contact_id);
-
-        Contact item = contact_list.get(position);
-
-        phoneNumber.setText(item.getPhoneNumber());
-        name.setText(item.getName());
-        //id.setText(Long.toString(item.getId()));
-
-        return convertView;
-
-    }
-
-    @Override
-    public long getItemId(int position) {
-        return position;
-    }
-
-    @Override
-    public Object getItem(int position) {
-        return contact_list.get(position);
-    }
-
-    public void addItem(String phonenumber, String name, Long id) {
-        Contact item = new Contact();
-
-        item.setId(id);
-        item.setName(name);
-        item.setPhoneNumber(phonenumber);
-
-        contact_list.add(item);
-    }
-
-    public void deleteAll() {
-
-    }
-
-
-}
 
 public class MainActivity extends AppCompatActivity {
 
@@ -231,28 +81,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    //connect to firebase
-    DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
-    DatabaseReference contactsRef = mRootRef.child("Contacts");
-
-    ContactUtil contactutil;
-    Context context;
-    private ListView listview;
-    private Contact_Adapter adapter;
-    static final String[] LIST_MENU = {"Name", "Phone Number", "Id"};
-
     GoogleSignInClient mGoogleSignInClient;
-
-    private void signOut() {
-        mGoogleSignInClient.signOut()
-                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        Toast.makeText(MainActivity.this, "Signed out successfully", Toast.LENGTH_LONG).show();
-                        finish();
-                    }
-                });
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -265,37 +94,11 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item){
         switch(item.getItemId()){
             case R.id.toolbar_next_button: {
+
                 signOut();
             }
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    public void downloadHandler(String phone_number_, String name_) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
-        builder.setTitle("Will you update your Phone Contact list?").setMessage("Choose");
-        builder.setPositiveButton("YES", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                //add data to phone contacts + update contacts UI
-                Intent intent = new Intent(ContactsContract.Intents.Insert.ACTION);
-                intent.setType(ContactsContract.RawContacts.CONTENT_TYPE);
-
-                intent.putExtra(ContactsContract.Intents.Insert.NAME, name_)
-                        .putExtra(ContactsContract.Intents.Insert.PHONE, phone_number_);
-                startActivity(intent);
-            }
-        });
-
-        builder.setNegativeButton("NO", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-            }
-        });
-
-        AlertDialog alertDialog = builder.create();
-        alertDialog.show();
     }
 
     @Override
@@ -314,161 +117,35 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.bar);
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
-        actionBar.setDisplayShowTitleEnabled(false);
+
+        Bundle bundle = getIntent().getExtras();
+        if(bundle != null){
+            String value=bundle.getString("email");
+            //Toast.makeText(context, value, Toast.LENGTH_SHORT).show();
+        }
+        actionBar.setTitle(bundle.getString("email"));
+        //actionBar.setDisplayShowTitleEnabled(false);
+
+
+
+
+
 
         adapter = new Contact_Adapter();
 
         listview = (ListView) findViewById(R.id.contact_list);
         listview.setAdapter(adapter);
 
-        listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
+        listview.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-                String Category = acct.getId();
-                contactsRef.child(Category).addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-
-
-                        listview.setAdapter(null);
-                        Contact_Adapter download_adapter = new Contact_Adapter();
-                        listview.setAdapter(download_adapter);
-
-                        String data = snapshot.getValue().toString();
-                        Gson gson = new Gson();
-                        ArrayList<Contact> download_contact_list = new ArrayList<Contact>();
-
-                        JsonObject jsonobj = gson.fromJson(data, JsonObject.class);
-                        largeLog("1111111111111111111111", jsonobj.toString());
-                        JsonArray contact_l = jsonobj.getAsJsonArray("ContactList");
-                        largeLog("222222222222222222", contact_l.toString());
-
-                        //change json object to list of object
-                        Iterator<JsonElement> iter = contact_l.iterator();
-                        JsonObject json_iter = new JsonObject();
-                        while(iter.hasNext()) {
-                            json_iter = iter.next().getAsJsonObject();
-                            Contact contact = gson.fromJson(json_iter, Contact.class);
-                            download_contact_list.add(contact);
-                        }
-
-                        //download_contact_list is List of Contact. now we need to update the screen to downloaded contact list
-
-                        Log.i("HELLLLLLLLLLLLLLLLLLLLLLLLLLLL", "HELOO asdf");
-                        downloadHandler(download_contact_list);
-
-
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-
-                    }
-                });
-
-
-                //Object listItem = listview.getItemAtPosition(position);
-                String phonenumber_ = ((TextView)view.findViewById(R.id.contact_phonenumber)).getText().toString();
-                String name_ = ((TextView)view.findViewById(R.id.contact_name)).getText().toString();
-                String phone ="tel:"+phonenumber_;
-                downloadHandler(phonenumber_, name_);
-
-                //Toast.makeText(context, phone  , Toast.LENGTH_SHORT).show();
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                String phone ="tel:"+((TextView)view.findViewById(R.id.contact_phonenumber)).getText().toString();
+                Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse(phone));
+                startActivity(intent);
+                return false;
             }
         });
 
-        context = this;
-        contactutil = new ContactUtil(this);
-        Contact iter;
-
-        ArrayList<Contact> arraylist = contactutil.getContactList();
-
-        JsonObject data = new JsonObject();
-        JsonArray contact_list = new JsonArray();
-        Gson gson = new Gson();
-        String RESULT;
-
-        for(int i=0;i < arraylist.size();i++) {
-            iter = arraylist.get(i);
-            JsonObject obj = (JsonObject) gson.toJsonTree(iter);
-            Log.i("33333333333", obj.toString());
-            adapter.addItem(iter.getPhoneNumber(), iter.getName(), iter.getId());
-            contact_list.add(obj);
-        }
-
-
-        data.add("ContactList", contact_list);
-
-        adapter.notifyDataSetChanged();
-      
-
-
-        //Making Owner Info
-        data.addProperty("OwnerID", acct.getId());
-        RESULT = gson.toJson(data);
-
-        //MAKE onclicklistener for upload btn
-        Button upload_btn = (Button) findViewById(R.id.contactlist_upload);
-        upload_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //contactsRef.setValue(RESULT);
-                String Category = acct.getId();
-                // "."이나 "@"가 들어가면 안된다.
-                contactsRef.child(Category).setValue(RESULT);
-            }
-        });
-
-        //Make onclicklistener for download btn
-        Button download_btn = (Button) findViewById(R.id.contactlist_download);
-        download_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String Category = acct.getId();
-                contactsRef.child(Category).addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-
-
-                    listview.setAdapter(null);
-                    Contact_Adapter download_adapter = new Contact_Adapter();
-                    listview.setAdapter(download_adapter);
-
-                    String data = snapshot.getValue().toString();
-                    Gson gson = new Gson();
-                    ArrayList<Contact> download_contact_list = new ArrayList<Contact>();
-
-                    JsonObject jsonobj = gson.fromJson(data, JsonObject.class);
-                    largeLog("1111111111111111111111", jsonobj.toString());
-                    JsonArray contact_l = jsonobj.getAsJsonArray("ContactList");
-                    largeLog("222222222222222222", contact_l.toString());
-
-                    //change json object to list of object
-                        Iterator<JsonElement> iter = contact_l.iterator();
-                        JsonObject json_iter = new JsonObject();
-                        while(iter.hasNext()) {
-                            json_iter = iter.next().getAsJsonObject();
-                            Contact contact = gson.fromJson(json_iter, Contact.class);
-                            download_contact_list.add(contact);
-                        }
-
-                        //download_contact_list is List of Contact. now we need to update the screen to downloaded contact list
-
-                        Log.i("HELLLLLLLLLLLLLLLLLLLLLLLLLLLL", "HELOO asdf");
-                        downloadHandler(download_contact_list);
-
-
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-
-                    }
-                });
-            }
-        });
 
         TabHost tabHost1 = (TabHost) findViewById(R.id.tabHost1) ;
         tabHost1.setup() ;
