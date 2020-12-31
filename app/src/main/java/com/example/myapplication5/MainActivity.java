@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.icu.text.Transliterator;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
@@ -21,9 +22,12 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Adapter;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TabHost;
 import android.widget.TextView;
@@ -111,6 +115,7 @@ class ContactUtil {
 
         ArrayList<Contact> contactlist = new ArrayList<Contact>();
 
+
         if (contactCursor.moveToFirst()) {
             do {
                 String phonenumber = contactCursor.getString(1).replaceAll("-", "");
@@ -132,12 +137,8 @@ class ContactUtil {
 
             } while (contactCursor.moveToNext());
         }
-
         return contactlist;
-
     }
-
-
 }
 
 
@@ -167,6 +168,12 @@ class Contact_Adapter extends BaseAdapter {
             convertView = inflater.inflate(R.layout.listview_contact, parent, false);
         }
 
+        ViewGroup.LayoutParams layoutParams = convertView.getLayoutParams();
+
+        layoutParams.height = 150;
+
+        convertView.setLayoutParams(layoutParams);
+
         phoneNumber = (TextView) convertView.findViewById(R.id.contact_phonenumber);
         name = (TextView) convertView.findViewById(R.id.contact_name);
         id = (TextView) convertView.findViewById(R.id.contact_id);
@@ -176,6 +183,7 @@ class Contact_Adapter extends BaseAdapter {
         phoneNumber.setText(item.getPhoneNumber());
         name.setText(item.getName());
         id.setText(Long.toString(item.getId()));
+
         return convertView;
 
     }
@@ -200,7 +208,6 @@ class Contact_Adapter extends BaseAdapter {
         contact_list.add(item);
     }
 }
-
 
 public class MainActivity extends AppCompatActivity {
 
@@ -227,7 +234,6 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater menuInflater = getMenuInflater();
@@ -238,7 +244,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item){
         switch(item.getItemId()){
-            case R.id.toolbar_next_button:{
+            case R.id.toolbar_next_button: {
                 signOut();
             }
         }
@@ -259,11 +265,23 @@ public class MainActivity extends AppCompatActivity {
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayShowTitleEnabled(false);
 
-
         adapter = new Contact_Adapter();
 
         listview = (ListView) findViewById(R.id.contact_list);
         listview.setAdapter(adapter);
+
+        listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                //Object listItem = listview.getItemAtPosition(position);
+                String phone ="tel:"+((TextView)view.findViewById(R.id.contact_phonenumber)).getText().toString();
+                Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse(phone));
+                startActivity(intent);
+
+                //Toast.makeText(context, phone  , Toast.LENGTH_SHORT).show();
+            }
+        });
 
         context = this;
         contactutil = new ContactUtil(this);
@@ -285,11 +303,11 @@ public class MainActivity extends AppCompatActivity {
             contact_list.add(obj);
         }
 
+
         data.addProperty("ContactList", String.valueOf(contact_list));
 
         adapter.notifyDataSetChanged();
-
-
+      
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestScopes(new Scope(Scopes.DRIVE_FULL))
                 .requestEmail()
